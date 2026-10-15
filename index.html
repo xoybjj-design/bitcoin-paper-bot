@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<title>بوت البيتكوين التجريبي</title>
+<style>
+:root{--bg:#0b1220;--panel:#121c2d;--muted:#9ba9bd;--text:#f3f6fb;--line:#28364c;--green:#45d6a0;--red:#ff7185;--yellow:#f7ca67;--blue:#82b5ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#101827,#0b1220 55%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;padding:16px 14px 32px;max-width:760px;margin:auto}
+header{padding:12px 2px 18px}h1{font-size:25px;margin:0 0 7px}p{color:var(--muted);line-height:1.65;margin:6px 0}.pill{display:inline-block;border:1px solid #34516b;color:#b8d9ff;border-radius:999px;padding:5px 10px;font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.card{background:rgba(18,28,45,.96);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:10px;min-width:0}.label{font-size:12px;color:var(--muted);margin-bottom:8px}.big{font-size:24px;font-weight:750;letter-spacing:-.4px;overflow-wrap:anywhere}.small{font-size:13px;color:var(--muted)}.up{color:var(--green)}.down{color:var(--red)}.wait{color:var(--yellow)}
+button,select,input{font:inherit}button{border:0;border-radius:12px;padding:12px 14px;background:#d9e8ff;color:#142238;font-weight:700;cursor:pointer;width:100%;margin-top:8px}button.secondary{background:#24334a;color:#f3f6fb;border:1px solid #3b4b64}button.danger{background:#4b2330;color:#ffd9df;border:1px solid #733345}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button{margin:0}.bar{height:8px;border-radius:99px;background:#28364c;overflow:hidden;margin:10px 0}.bar span{display:block;height:100%;background:linear-gradient(90deg,#4b9dff,#45d6a0);width:0}
+h2{font-size:17px;margin:0 0 12px}.row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}.row:last-child{border-bottom:0}.row span:first-child{color:var(--muted)}.signal{font-size:19px;font-weight:800}.notice{border:1px solid #6c5730;background:#2a2418;border-radius:12px;padding:12px;color:#f5dfaa;font-size:13px;line-height:1.6;margin:10px 0 14px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px}input,select{width:100%;border:1px solid var(--line);background:#0b1423;color:var(--text);border-radius:10px;padding:11px}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:right;padding:9px 5px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}.empty{text-align:center;color:var(--muted);padding:18px 4px}
+footer{color:var(--muted);font-size:12px;line-height:1.7;padding:6px 2px}
+@media(min-width:560px){body{padding:26px}.big{font-size:29px}}
+</style>
+</head>
+<body>
+<header>
+  <span class="pill">محاكاة تعليمية فقط • بدون تداول حقيقي</span>
+  <h1>بوت البيتكوين التجريبي</h1>
+  <p>يراقب السعر، يحسب مؤشرات بسيطة، ويجرب إشارات افتراضية. مو توصية استثمارية ولا ضمان للربح.</p>
+</header>
+
+<div class="grid">
+  <section class="card">
+    <div class="label">سعر BTC الحالي</div>
+    <div class="big" id="price">جارٍ التحميل…</div>
+    <div class="small" id="updated">مصدر السعر: CoinGecko</div>
+  </section>
+  <section class="card">
+    <div class="label">تغير 24 ساعة</div>
+    <div class="big" id="change">—</div>
+    <div class="small">تغير السعر المعلن</div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>قرار البوت</h2>
+  <div class="signal wait" id="signal">بانتظار البيانات</div>
+  <p id="reason">نجمع بيانات كافية قبل إصدار إشارة.</p>
+  <div class="bar"><span id="confidence"></span></div>
+  <div class="row"><span>المتوسط القصير (5)</span><b id="sma5">—</b></div>
+  <div class="row"><span>المتوسط الطويل (12)</span><b id="sma12">—</b></div>
+  <div class="row"><span>عدد نقاط البيانات</span><b id="samples">0</b></div>
+  <button id="refresh">تحديث البيانات</button>
+</section>
+
+<section class="card">
+  <h2>رصيد المحاكاة</h2>
+  <div class="grid">
+    <div><div class="label">الرصيد الافتراضي</div><div class="big" id="cash">$1,000.00</div></div>
+    <div><div class="label">قيمة المحفظة</div><div class="big" id="equity">$1,000.00</div></div>
+    <div><div class="label">ربح/خسارة مفتوحة</div><div class="big" id="unrealized">$0.00</div></div>
+    <div><div class="label">صفقات مغلقة</div><div class="big" id="closed">0</div></div>
+  </div>
+  <label for="size">حجم الصفقة الافتراضية بالدولار</label>
+  <input id="size" type="number" min="10" max="1000" step="10" value="100">
+  <div class="actions" style="margin-top:10px">
+    <button id="buy">شراء افتراضي</button>
+    <button id="sell" class="secondary">بيع/إغلاق افتراضي</button>
+  </div>
+  <button id="reset" class="danger">تصفير المحاكاة</button>
+  <p class="small">المحاكاة تحتفظ برصيدها على هذا الجهاز فقط. لا توجد أوامر ترسل لأي منصة.</p>
+</section>
+
+<section class="card">
+  <h2>سجل الصفقات</h2>
+  <div style="overflow-x:auto">
+    <table><thead><tr><th>الوقت</th><th>العملية</th><th>سعر الدخول</th><th>النتيجة</th></tr></thead><tbody id="history"><tr><td colspan="4" class="empty">ماكو صفقات بعد</td></tr></tbody></table>
+  </div>
+</section>
+
+<section class="card">
+  <h2>تطوير الذكاء الاصطناعي</h2>
+  <p>هذه النسخة الأولى تستخدم قواعد حسابية شفافة (متوسطات متحركة)، وليست نموذج ذكاء اصطناعي مستقل. نبدأ بها حتى نختبر الفكرة بأمان قبل إضافة أي نموذج آخر.</p>
+  <div class="row"><span>حالة البيانات</span><b id="status">لم يتم الاتصال بعد</b></div>
+  <div class="row"><span>وضع التداول</span><b class="up">افتراضي فقط</b></div>
+</section>
+
+<div class="notice">تنبيه للعراق: لا تربط هذا النموذج بمحفظة أو حساب تداول حقيقي. القوانين والقيود المحلية قد تنطبق حتى على بعض الخدمات المرتبطة بالعملات الرقمية؛ تحقّق من التعليمات الرسمية. هذا الملف لا ينفّذ صفقات حقيقية ولا يطلب مفاتيح API.</div>
+<footer>ملاحظة تقنية: الأسعار تجلب من واجهة CoinGecko العامة. قد يفشل الاتصال بسبب حدود الخدمة أو الشبكة. لا توجد استضافة مستمرة؛ الصفحة تعمل حين تكون مفتوحة في المتصفح.</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+let prices = [];
+let state = {cash:1000, position:null, history:[], closed:0};
+const KEY='btc_paper_bot_v1';
+try { const saved=JSON.parse(localStorage.getItem(KEY)||'null'); if(saved && typeof saved.cash==='number') state=saved; } catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function mean(a){return a.reduce((s,x)=>s+x,0)/a.length}
+function analyze(){
+  $('samples').textContent=prices.length;
+  if(prices.length<12){$('signal').textContent='بانتظار بيانات أكثر';$('signal').className='signal wait';$('reason').textContent='نحتاج 12 نقطة سعرية على الأقل. افتح الصفحة وحدثها لاحقاً.';$('confidence').style.width='10%';return;}
+  const a=prices.slice(-5), b=prices.slice(-12);
+  const s5=mean(a), s12=mean(b), last=prices[prices.length-1];
+  $('sma5').textContent='$'+fmt(s5); $('sma12').textContent='$'+fmt(s12);
+  if(s5>s12*1.001){$('signal').textContent='ميل صاعد محتمل';$('signal').className='signal up';$('reason').textContent='المتوسط القصير أعلى من الطويل. هذه ملاحظة اتجاهية وليست أمراً بالشراء.';$('confidence').style.width='65%';}
+  else if(s5<s12*.999){$('signal').textContent='ميل هابط محتمل';$('signal').className='signal down';$('reason').textContent='المتوسط القصير أدنى من الطويل. هذا لا يضمن استمرار النزول.';$('confidence').style.width='65%';}
+  else{$('signal').textContent='انتظار';$('signal').className='signal wait';$('reason').textContent='المتوسطان متقاربان؛ لا توجد إشارة اتجاه واضحة وفق هذه القاعدة.';$('confidence').style.width='30%';}
+}
+function render(){
+  $('cash').textContent='$'+fmt(state.cash);
+  const posVal=state.position && prices.length ? state.position.qty*prices[prices.length-1] : 0;
+  const unreal=state.position && prices.length ? posVal-state.position.cost : 0;
+  $('equity').textContent='$'+fmt(state.cash+posVal);
+  $('unrealized').textContent=(unreal<0?'−':'')+'$'+fmt(Math.abs(unreal));
+  $('unrealized').className='big '+(unreal>0?'up':unreal<0?'down':'');
+  $('closed').textContent=state.closed;
+  $('buy').disabled=!!state.position;
+  $('sell').disabled=!state.position;
+  const body=$('history');
+  if(!state.history.length){body.innerHTML='<tr><td colspan="4" class="empty">ماكو صفقات بعد</td></tr>';return;}
+  body.innerHTML=state.history.slice().reverse().slice(0,30).map(t=>`<tr><td>${t.time}</td><td>${t.action}</td><td>$${fmt(t.price)}</td><td class="${t.pnl>0?'up':t.pnl<0?'down':''}">${t.pnl===null?'—':(t.pnl<0?'−':'')+'$'+fmt(Math.abs(t.pnl))}</td></tr>`).join('');
+}
+async function refresh(){
+  $('status').textContent='جارٍ جلب البيانات…';$('refresh').disabled=true;
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true',{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json(); const p=j.bitcoin.usd; const ch=j.bitcoin.usd_24h_change;
+    if(typeof p!=='number') throw new Error('No price');
+    $('price').textContent='$'+fmt(p);
+    $('change').textContent=(ch>=0?'+':'')+Number(ch).toFixed(2)+'%';
+    $('change').className='big '+(ch>=0?'up':'down');
+    $('updated').textContent='آخر تحديث: '+new Date().toLocaleTimeString('ar-IQ');
+    $('status').textContent='متصل';
+    // Keep a local sequence of observations, not historical candles.
+    prices.push(p); if(prices.length>100) prices=prices.slice(-100);
+    analyze(); render();
+  }catch(e){
+    $('status').textContent='تعذر الاتصال';
+    $('reason').textContent='ما قدرنا نجيب السعر. جرّب تحديث الصفحة أو تأكد من الإنترنت. قد تكون الخدمة محدودة مؤقتاً.';
+    $('updated').textContent='الاتصال غير متاح حالياً';
+  }finally{$('refresh').disabled=false;}
+}
+$('buy').addEventListener('click',()=>{
+  if(!prices.length||state.position)return;
+  const p=prices[prices.length-1], amount=Math.max(0,Math.min(Number($('size').value)||100, state.cash));
+  if(amount<10){alert('الرصيد الافتراضي غير كافٍ أو حجم الصفقة قليل.');return;}
+  const qty=amount/p;state.cash-=amount;state.position={qty,cost:amount,entry:p};
+  state.history.push({time:new Date().toLocaleString('ar-IQ'),action:'شراء وهمي',price:p,pnl:null});
+  save();render();
+});
+$('sell').addEventListener('click',()=>{
+  if(!state.position||!prices.length)return;
+  const p=prices[prices.length-1], pos=state.position, proceeds=pos.qty*p, pnl=proceeds-pos.cost;
+  state.cash+=proceeds;state.position=null;state.closed++;
+  state.history.push({time:new Date().toLocaleString('ar-IQ'),action:'إغلاق وهمي',price:p,pnl});
+  save();render();
+});
+$('reset').addEventListener('click',()=>{
+  if(confirm('متأكد تريد تصفير الرصيد والسجل الافتراضي؟')){state={cash:1000,position:null,history:[],closed:0};save();render();}
+});
+$('refresh').addEventListener('click',refresh);
+render();refresh();
+</script>
+</body>
+</html>
